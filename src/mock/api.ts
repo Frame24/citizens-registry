@@ -23,11 +23,25 @@ export async function listCitizens(
 
   const page = params.page && params.page > 0 ? params.page : 1
   const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 20
+
+  let filtered = citizens
+
+  if (params.search?.trim()) {
+    const q = params.search.trim().toLowerCase()
+    filtered = filtered.filter((c) => fullName(c).toLowerCase().includes(q))
+  }
+  if (params.region) {
+    filtered = filtered.filter((c) => c.registrationAddress.region === params.region)
+  }
+  if (params.status) {
+    filtered = filtered.filter((c) => c.registrationStatus === params.status)
+  }
+
   const start = (page - 1) * pageSize
 
   return {
-    items: citizens.slice(start, start + pageSize),
-    total: citizens.length,
+    items: filtered.slice(start, start + pageSize),
+    total: filtered.length,
     page,
     pageSize,
   }
@@ -35,5 +49,5 @@ export async function listCitizens(
 
 export async function getCitizen(id: string): Promise<Citizen | null> {
   await delay()
-  return citizens.find((citizen) => citizen.id === id) ?? null
+  return citizens.find((c) => c.id === id) ?? null
 }

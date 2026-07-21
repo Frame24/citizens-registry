@@ -1,4 +1,5 @@
 export { getCitizen, listCitizens, fullName } from './api'
+export { REGIONS, STATUSES } from './dictionaries'
 export { GENDER_LABELS, STATUS_LABELS } from './labels'
 export type {
   Address,

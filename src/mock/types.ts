@@ -90,6 +90,9 @@ export interface Citizen {
 export interface ListCitizensParams {
   page?: number
   pageSize?: number
+  search?: string
+  region?: string
+  status?: RegistrationStatus
 }
 
 export interface ListCitizensResult {

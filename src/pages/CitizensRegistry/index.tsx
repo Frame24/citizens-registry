@@ -1,70 +1,134 @@
 import { useEffect, useState } from 'react'
 import {
   Box,
+  Button,
   CircularProgress,
-  Link,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TablePagination,
   TableRow,
+  TextField,
   Typography,
 } from '@mui/material'
-import { Link as RouterLink } from 'react-router-dom'
-import { fullName, listCitizens, STATUS_LABELS, type Citizen } from '../../mock'
-
-const PAGE_SIZE_OPTIONS = [10, 20, 50]
+import { useNavigate } from 'react-router-dom'
+import {
+  fullName,
+  listCitizens,
+  REGIONS,
+  STATUS_LABELS,
+  STATUSES,
+  type Citizen,
+  type RegistrationStatus,
+} from '../../mock'
 
 export function CitizensRegistryPage() {
+  const navigate = useNavigate()
+
+  const [search, setSearch] = useState('')
+  const [region, setRegion] = useState('')
+  const [status, setStatus] = useState<RegistrationStatus | ''>('')
+
   const [items, setItems] = useState<Citizen[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState({ search: '', region: '', status: '' as RegistrationStatus | '' })
 
   useEffect(() => {
-    let cancelled = false
     setLoading(true)
-    setError(null)
+    listCitizens({
+      page: page + 1,
+      pageSize,
+      search: query.search || undefined,
+      region: query.region || undefined,
+      status: query.status || undefined,
+    })
+      .then((res) => {
+        setItems(res.items)
+        setTotal(res.total)
+      })
+      .finally(() => setLoading(false))
+  }, [query, page, pageSize])
 
-    listCitizens({ page: page + 1, pageSize })
-      .then((result) => {
-        if (cancelled) return
-        setItems(result.items)
-        setTotal(result.total)
-      })
-      .catch(() => {
-        if (!cancelled) setError('Не удалось загрузить список')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+  const handleFind = () => {
+    setPage(0)
+    setQuery({ search, region, status })
+  }
 
-    return () => {
-      cancelled = true
-    }
-  }, [page, pageSize])
+  const handleReset = () => {
+    setSearch('')
+    setRegion('')
+    setStatus('')
+    setPage(0)
+    setQuery({ search: '', region: '', status: '' })
+  }
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 1 }}>
+      <Typography variant="h5" gutterBottom>
         Картотека граждан
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
         Всего записей: {total}
       </Typography>
 
-      {error && (
-        <Typography color="error" sx={{ mb: 2 }}>
-          {error}
-        </Typography>
-      )}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+        <TextField
+          size="small"
+          label="ФИО"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleFind()
+          }}
+        />
+        <FormControl size="small" sx={{ minWidth: 180 }}>
+          <InputLabel>Регион</InputLabel>
+          <Select
+            label="Регион"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+          >
+            <MenuItem value="">Все</MenuItem>
+            {REGIONS.map((r) => (
+              <MenuItem key={r} value={r}>
+                {r}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Статус</InputLabel>
+          <Select
+            label="Статус"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as RegistrationStatus | '')}
+          >
+            <MenuItem value="">Все</MenuItem>
+            {STATUSES.map((s) => (
+              <MenuItem key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <Button variant="contained" onClick={handleFind}>
+          Найти
+        </Button>
+        <Button onClick={handleReset}>Сбросить</Button>
+      </Stack>
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress size={32} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress size={28} />
         </Box>
       ) : (
         <>
@@ -78,20 +142,22 @@ export function CitizensRegistryPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {items.map((citizen) => (
-                <TableRow key={citizen.id} hover>
-                  <TableCell>
-                    <Link
-                      component={RouterLink}
-                      to={`/citizens/${citizen.id}`}
-                      underline="hover"
-                    >
-                      {fullName(citizen)}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{citizen.birthDate}</TableCell>
-                  <TableCell>{citizen.registrationAddress.region}</TableCell>
-                  <TableCell>{STATUS_LABELS[citizen.registrationStatus]}</TableCell>
+              {items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4}>Ничего не найдено</TableCell>
+                </TableRow>
+              )}
+              {items.map((c) => (
+                <TableRow
+                  key={c.id}
+                  hover
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => navigate(`/citizens/${c.id}`)}
+                >
+                  <TableCell>{fullName(c)}</TableCell>
+                  <TableCell>{c.birthDate}</TableCell>
+                  <TableCell>{c.registrationAddress.region}</TableCell>
+                  <TableCell>{STATUS_LABELS[c.registrationStatus]}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -101,13 +167,13 @@ export function CitizensRegistryPage() {
             component="div"
             count={total}
             page={page}
-            onPageChange={(_, nextPage) => setPage(nextPage)}
+            onPageChange={(_, p) => setPage(p)}
             rowsPerPage={pageSize}
-            onRowsPerPageChange={(event) => {
-              setPageSize(Number(event.target.value))
+            onRowsPerPageChange={(e) => {
+              setPageSize(Number(e.target.value))
               setPage(0)
             }}
-            rowsPerPageOptions={PAGE_SIZE_OPTIONS}
+            rowsPerPageOptions={[10, 20, 50]}
             labelRowsPerPage="На странице:"
             labelDisplayedRows={({ from, to, count }) => `${from}-${to} из ${count}`}
           />
