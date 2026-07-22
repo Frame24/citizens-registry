@@ -47,7 +47,20 @@ export async function listCitizens(
   }
 }
 
+function cloneCitizen(citizen: Citizen): Citizen {
+  return JSON.parse(JSON.stringify(citizen)) as Citizen
+}
+
 export async function getCitizen(id: string): Promise<Citizen | null> {
   await delay()
-  return citizens.find((c) => c.id === id) ?? null
+  const found = citizens.find((c) => c.id === id)
+  return found ? cloneCitizen(found) : null
+}
+
+export async function updateCitizen(citizen: Citizen): Promise<Citizen | null> {
+  await delay(150)
+  const index = citizens.findIndex((c) => c.id === citizen.id)
+  if (index === -1) return null
+  citizens[index] = cloneCitizen(citizen)
+  return cloneCitizen(citizens[index])
 }

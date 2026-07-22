@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { Link as RouterLink, useParams } from 'react-router-dom'
-import {
-  fullName,
-  GENDER_LABELS,
-  getCitizen,
-  STATUS_LABELS,
-  type Citizen,
-} from '../../mock'
+import { getCitizen, type Citizen } from '../../mock'
+import { CitizenCardForm } from '../../components/citizen-card/CitizenCardForm'
 
 export function CitizenCardPage() {
   const { id } = useParams()
@@ -69,8 +64,6 @@ export function CitizenCardPage() {
     )
   }
 
-  const address = citizen.registrationAddress
-
   return (
     <Box>
       <Button
@@ -82,24 +75,7 @@ export function CitizenCardPage() {
         Назад к картотеке
       </Button>
 
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        {fullName(citizen)}
-      </Typography>
-
-      <Typography>Дата рождения: {citizen.birthDate}</Typography>
-      <Typography>Пол: {GENDER_LABELS[citizen.gender]}</Typography>
-      <Typography>Статус учёта: {STATUS_LABELS[citizen.registrationStatus]}</Typography>
-      <Typography>
-        Адрес: {address.region}, {address.city}, {address.street}, д. {address.house}
-        {address.apartment ? `, кв. ${address.apartment}` : ''}
-      </Typography>
-      <Typography>Телефон: {citizen.phone ?? 'нет'}</Typography>
-      <Typography>СНИЛС: {citizen.snils ?? 'нет'}</Typography>
-
-      <Typography sx={{ mt: 2 }}>
-        Семья: {citizen.family.length}, образование: {citizen.education.length}, работа:{' '}
-        {citizen.workHistory.length}, документы: {citizen.documents.length}
-      </Typography>
+      <CitizenCardForm key={citizen.id} initialCitizen={citizen} />
     </Box>
   )
 }
