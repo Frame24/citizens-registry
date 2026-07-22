@@ -20,6 +20,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import {
   fullName,
+  GENDER_LABELS,
   listCitizens,
   REGIONS,
   STATUS_LABELS,
@@ -90,12 +91,19 @@ export function CitizensRegistryPage() {
             if (e.key === 'Enter') handleFind()
           }}
         />
-        <FormControl size="small" sx={{ minWidth: 180 }}>
+        <FormControl size="small" sx={{ width: 220, flexShrink: 0 }}>
           <InputLabel>Регион</InputLabel>
           <Select
             label="Регион"
             value={region}
             onChange={(e) => setRegion(e.target.value)}
+            sx={{
+              '& .MuiSelect-select': {
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              },
+            }}
           >
             <MenuItem value="">Все</MenuItem>
             {REGIONS.map((r) => (
@@ -105,12 +113,19 @@ export function CitizensRegistryPage() {
             ))}
           </Select>
         </FormControl>
-        <FormControl size="small" sx={{ minWidth: 160 }}>
+        <FormControl size="small" sx={{ width: 160, flexShrink: 0 }}>
           <InputLabel>Статус</InputLabel>
           <Select
             label="Статус"
             value={status}
             onChange={(e) => setStatus(e.target.value as RegistrationStatus | '')}
+            sx={{
+              '& .MuiSelect-select': {
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              },
+            }}
           >
             <MenuItem value="">Все</MenuItem>
             {STATUSES.map((s) => (
@@ -137,14 +152,17 @@ export function CitizensRegistryPage() {
               <TableRow>
                 <TableCell>ФИО</TableCell>
                 <TableCell>Дата рождения</TableCell>
+                <TableCell>Пол</TableCell>
+                <TableCell>Телефон</TableCell>
                 <TableCell>Регион</TableCell>
+                <TableCell>Дата постановки на учёт</TableCell>
                 <TableCell>Статус</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4}>Ничего не найдено</TableCell>
+                  <TableCell colSpan={7}>Ничего не найдено</TableCell>
                 </TableRow>
               )}
               {items.map((c) => (
@@ -156,7 +174,10 @@ export function CitizensRegistryPage() {
                 >
                   <TableCell>{fullName(c)}</TableCell>
                   <TableCell>{c.birthDate}</TableCell>
+                  <TableCell>{GENDER_LABELS[c.gender]}</TableCell>
+                  <TableCell>{c.phone ?? '-'}</TableCell>
                   <TableCell>{c.registrationAddress.region}</TableCell>
+                  <TableCell>{c.registeredAt}</TableCell>
                   <TableCell>{STATUS_LABELS[c.registrationStatus]}</TableCell>
                 </TableRow>
               ))}
