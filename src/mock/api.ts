@@ -1,6 +1,13 @@
 import { CITIZEN_COUNT } from './dictionaries'
 import { createCitizens } from './generate'
-import type { Citizen, ListCitizensParams, ListCitizensResult } from './types'
+import { STATUS_LABELS } from './labels'
+import type {
+  Citizen,
+  DashboardStats,
+  ListCitizensParams,
+  ListCitizensResult,
+  RegistrationStatus,
+} from './types'
 
 const citizens = createCitizens(CITIZEN_COUNT)
 
@@ -63,4 +70,75 @@ export async function updateCitizen(citizen: Citizen): Promise<Citizen | null> {
   if (index === -1) return null
   citizens[index] = cloneCitizen(citizen)
   return cloneCitizen(citizens[index])
+}
+
+function getAge(birthDate: string): number {
+  const now = new Date()
+  const birth = new Date(birthDate)
+  let age = now.getFullYear() - birth.getFullYear()
+  if (
+    now.getMonth() < birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())
+  ) {
+    age--
+  }
+  return age
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  await delay()
+
+  let active = 0
+  let pending = 0
+  let archived = 0
+
+  const ageGroups = {
+    '0-17': 0,
+    '18-29': 0,
+    '30-44': 0,
+    '45-59': 0,
+    '60+': 0,
+  }
+
+  const regions: Record<string, number> = {}
+  const statusList: RegistrationStatus[] = ['active', 'archived', 'temporary', 'pending']
+  const statuses: Record<RegistrationStatus, number> = {
+    active: 0,
+    archived: 0,
+    temporary: 0,
+    pending: 0,
+  }
+
+  for (const c of citizens) {
+    statuses[c.registrationStatus]++
+
+    if (c.registrationStatus === 'active') active++
+    else if (c.registrationStatus === 'pending') pending++
+    else if (c.registrationStatus === 'archived') archived++
+
+    const age = getAge(c.birthDate)
+    if (age < 18) ageGroups['0-17']++
+    else if (age < 30) ageGroups['18-29']++
+    else if (age < 45) ageGroups['30-44']++
+    else if (age < 60) ageGroups['45-59']++
+    else ageGroups['60+']++
+
+    const region = c.registrationAddress.region
+    regions[region] = (regions[region] || 0) + 1
+  }
+
+  return {
+    total: citizens.length,
+    active,
+    pending,
+    archived,
+    byAge: Object.entries(ageGroups).map(([name, value]) => ({ name, value })),
+    byRegion: Object.entries(regions)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value),
+    byStatus: statusList.map((key) => ({
+      name: STATUS_LABELS[key],
+      value: statuses[key],
+    })),
+  }
 }

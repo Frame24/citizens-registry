@@ -35,6 +35,17 @@ function atIndex<T>(items: readonly T[], index: number): T {
   return items[index % items.length]!
 }
 
+/** Выбор по весам, чтобы данные на графиках не были равномерными */
+function pickByWeights<T>(items: readonly T[], weights: number[]): T {
+  const total = weights.reduce((sum, w) => sum + w, 0)
+  let n = Math.floor(Math.random() * total)
+  for (let i = 0; i < items.length; i++) {
+    n -= weights[i]!
+    if (n < 0) return items[i]!
+  }
+  return items[0]!
+}
+
 function pad2(value: number): string {
   return String(value).padStart(2, '0')
 }
@@ -61,9 +72,12 @@ function createPhone(index: number): string {
   return `+7 (9${code}) ${part1}-${part2}-${part3}`
 }
 
+// Москва / СПб чуть чаще, остальные регионы реже
+const REGION_WEIGHTS = [18, 14, 12, 10, 10, 9, 8, 7, 6, 6]
+
 function createAddress(index: number): Address {
   return {
-    region: atIndex(REGIONS, index),
+    region: pickByWeights(REGIONS, REGION_WEIGHTS),
     city: atIndex(CITIES, index * 3),
     street: atIndex(STREETS, index * 5),
     house: String((index % 80) + 1),
@@ -193,6 +207,8 @@ export function createCitizen(index: number): Citizen {
   const snils = createSnils(index)
   const inn = index % 5 === 0 ? undefined : String(100000000000 + index).slice(0, 12)
   const employmentStatus = atIndex(EMPLOYMENT_STATUSES, index * 7)
+  // На учёте чаще, архив / проверка реже
+  const registrationStatus = pickByWeights(STATUSES, [55, 15, 18, 12])
 
   return {
     id,
@@ -207,7 +223,7 @@ export function createCitizen(index: number): Citizen {
     email: index % 4 === 0 ? undefined : `user${index}@mail.ru`,
     registrationAddress: createAddress(index),
     actualAddress: index % 3 === 0 ? createAddress(index + 11) : undefined,
-    registrationStatus: atIndex(STATUSES, index),
+    registrationStatus,
     registeredAt: dateFromYear(2016 + (index % 9), index),
     notes: index % 7 === 0 ? 'Нужно уточнить адрес' : undefined,
     family: createFamily(id, index),

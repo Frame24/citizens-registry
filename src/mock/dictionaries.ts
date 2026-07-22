@@ -160,4 +160,4 @@ export const EDUCATION_LEVELS: EducationLevel[] = [
   'other',
 ]
 
-export const CITIZEN_COUNT = 1200
+export const CITIZEN_COUNT = 136343

@@ -101,3 +101,13 @@ export interface ListCitizensResult {
   page: number
   pageSize: number
 }
+
+export interface DashboardStats {
+  total: number
+  active: number
+  pending: number
+  archived: number
+  byAge: { name: string; value: number }[]
+  byRegion: { name: string; value: number }[]
+  byStatus: { name: string; value: number }[]
+}

@@ -1,4 +1,10 @@
-export { getCitizen, listCitizens, fullName, updateCitizen } from './api'
+export {
+  getCitizen,
+  getDashboardStats,
+  listCitizens,
+  fullName,
+  updateCitizen,
+} from './api'
 export {
   EDUCATION_LEVELS,
   EMPLOYMENT_STATUSES,
@@ -18,6 +24,7 @@ export type {
   Address,
   Citizen,
   CitizenDocument,
+  DashboardStats,
   DocumentType,
   EducationLevel,
   EducationRecord,
